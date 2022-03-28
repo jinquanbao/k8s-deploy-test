@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8s-java-deploy-test
+  name: k8s-java-deploy-test
+  namespace: dev-project
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+      nodePort: 30861
+  selector:
+    app: k8s-java-deploy-test
+  sessionAffinity: None
+  type: NodePort

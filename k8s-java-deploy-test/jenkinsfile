@@ -1,0 +1,71 @@
+pipeline {
+  agent {
+    node {
+      label 'maven'
+    }
+  }
+
+    parameters {
+        string(name:'TAG_NAME',defaultValue: 'master',description:'')
+        string(name:'PROFILE',defaultValue: 'dev',description:'')
+    }
+
+    environment {
+        GIT_CREDENTIAL_ID = 'github-id'
+        KUBECONFIG_CREDENTIAL_ID = 'kubeconfig-id'
+        REGISTRY_CREDENTIAL_ID = 'dockerhub-id'
+        REGISTRY_ADDRESS = 'docker.io'
+        REGISTRY_NAMESPACE = 'jinquanbao'
+        APP_NAME = 'k8s-java-deploy-test'
+    }
+
+    //println "$GIT_CREDENTIAL_ID $TAG_NAME $PROFILE $REGISTRY_CREDENTIAL_ID $REGISTRY_ADDRESS $REGISTRY_NAMESPACE"
+
+    stages {
+        stage ('checkout scm') {
+            steps {
+                checkout(scm)
+            }
+        }
+        
+			
+		stage ('build') {
+			steps {
+				container ('maven') {
+					dir("$APP_NAME"){
+					
+					
+						sh 'chmod +x ./gradlew; ./gradlew  clean bootJar'
+						sh 'docker build -f dockerfile -t $REGISTRY_ADDRESS/$REGISTRY_NAMESPACE/$APP_NAME:$TAG_NAME-$BUILD_NUMBER .'
+					
+					}
+				}
+			}
+		}
+
+		stage ('push image') {
+			steps {
+				container ('maven') {
+					withCredentials([usernamePassword(passwordVariable : 'DOCKER_PASSWORD' ,usernameVariable : 'DOCKER_USERNAME' ,credentialsId : "$REGISTRY_CREDENTIAL_ID" ,)]) {
+						sh 'echo "$DOCKER_PASSWORD" | docker login $REGISTRY_ADDRESS -u "$DOCKER_USERNAME" --password-stdin'
+						sh 'docker push  $REGISTRY_ADDRESS/$REGISTRY_NAMESPACE/$APP_NAME:$TAG_NAME-$BUILD_NUMBER'
+					}
+				}
+			}
+		}
+
+		stage('deploy') {
+		  steps {
+			dir("$APP_NAME"){
+			
+				kubernetesDeploy(configs: "deploy/${PROFILE}/**", enableConfigSubstitution: true, kubeconfigId: "$KUBECONFIG_CREDENTIAL_ID")
+			
+			}
+			
+		  }
+		}
+
+        
+
+    }
+}

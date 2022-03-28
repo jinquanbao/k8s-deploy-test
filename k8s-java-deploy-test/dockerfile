@@ -1,0 +1,22 @@
+FROM openjdk:8-jdk
+#作者 
+MAINTAINER chenjq@mail.com
+
+#java 运行参数，可以通过docker run -e 参数覆盖
+ENV JAVA_OPS="-Duser.timezone=GMT+8 \
+ -Xmx512m \
+ -Xms128m"
+
+#docker run -e PARAMS="--server.port 8080"
+ENV PARAMS="--server.port=8080 "
+RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
+
+
+# 把可执行jar包复制到基础镜像的根目录下
+COPY  build/libs/*.jar /app.jar
+
+# 镜像要暴露的端口，如要使用端口，在执行docker run命令时使用-p生效
+EXPOSE 8080
+
+# 在镜像运行为容器后执行的命令
+ENTRYPOINT ["/bin/sh","-c","java ${JAVA_OPS} -Dfile.encoding=utf8 -Djava.security.egd=file:/dev/./urandom -jar app.jar ${PARAMS}"]
