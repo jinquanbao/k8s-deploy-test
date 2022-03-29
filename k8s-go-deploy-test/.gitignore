@@ -1,0 +1,7 @@
+.idea/
+*.iml
+.vscode
+logs
+node_modules
+t.go
+*.o
