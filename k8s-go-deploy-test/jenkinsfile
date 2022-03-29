@@ -1,7 +1,7 @@
 pipeline {
   agent {
     node {
-      label 'go'
+      label 'maven'
     }
   }
 
@@ -30,7 +30,7 @@ pipeline {
 			
 		stage ('build') {
 			steps {
-				container ('go') {
+				container ('maven') {
 					dir("$APP_NAME"){
 					
 						sh 'docker build -f dockerfile -t $REGISTRY_ADDRESS/$REGISTRY_NAMESPACE/$APP_NAME:$TAG_NAME-$BUILD_NUMBER .'
