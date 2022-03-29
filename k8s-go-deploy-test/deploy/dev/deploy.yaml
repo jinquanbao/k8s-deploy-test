@@ -47,7 +47,7 @@ spec:
               mountPath: /etc/localtime
             - name: volume-config
               readOnly: true
-              mountPath: /app/configs/config.toml
+              mountPath: /app/configs/
           resources:
             limits:
               cpu: 300m
